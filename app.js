@@ -1,17 +1,18 @@
-﻿/**
- * ?箸瘣鴃璊?繚 閮剖?蝡臬??批?銵冽 (Smart Shower Chair Dashboard)
- * ?舀?單?憭?憓芋?研???皜砌葡瘚SP32-S3 閬?撘?閰???蝡?API ????? */
+/**
+ * 智慧洗澡椅 · 設備端即時監控儀表板 (Smart Shower Chair Dashboard)
+ * 支援即時多情境模擬、動態感測串流、ESP32-S3 規則引擎評定與後端 API 連線。
+ */
 
 (function () {
   "use strict";
 
-  // 1. ?身??鞈???(撠? MQTT 閬?葫閰行?靘?
+  // 1. 預設情境資料集 (對齊 MQTT 規格與測試案例)
   const SCENARIOS = {
     "normal": {
-      name: "甇?虜?尿 (NORMAL)",
+      name: "正常坐姿 (NORMAL)",
       status: "NORMAL",
       reason: "pressure_and_tof_normal",
-      reasonZh: "??憯???嚗??寡??Ｗ摰璅???,
+      reasonZh: "四點壓力均等，前方距離在安全標準內",
       direction: null,
       device_id: "chair_01",
       connection: "ONLINE",
@@ -22,10 +23,10 @@
       sensor_health: { fsr: true, tof: true, environment: true }
     },
     "front-pressure": {
-      name: "??? (CAUTION)",
+      name: "前側偏壓 (CAUTION)",
       status: "CAUTION",
       reason: "pressure_shift_only",
-      reasonZh: "?尿?嚗?敹?憿舫?銝剜?",
+      reasonZh: "坐姿前傾，重心明顯集中於前側",
       direction: "front",
       device_id: "chair_01",
       connection: "ONLINE",
@@ -36,10 +37,10 @@
       sensor_health: { fsr: true, tof: true, environment: true }
     },
     "left-right-imbalance": {
-      name: "撌血銝像銵?(CAUTION)",
+      name: "左右不平衡 (CAUTION)",
       status: "CAUTION",
       reason: "pressure_shift_only",
-      reasonZh: "頨恍?撌血?暹?嚗椰?喳??????,
+      reasonZh: "身體左側傾斜，左右受力嚴重不均",
       direction: "left",
       device_id: "chair_01",
       connection: "ONLINE",
@@ -50,10 +51,10 @@
       sensor_health: { fsr: true, tof: true, environment: true }
     },
     "distance-abnormal": {
-      name: "頝?啣虜 (CAUTION)",
+      name: "距離異常 (CAUTION)",
       status: "CAUTION",
       reason: "tof_abnormal_only",
-      reasonZh: "ToF ?頝?之嚗?蝣箄??尿?臬敺宏",
+      reasonZh: "ToF 前方距離過大，請確認坐姿是否後移",
       direction: null,
       device_id: "chair_01",
       connection: "ONLINE",
@@ -64,10 +65,10 @@
       sensor_health: { fsr: true, tof: true, environment: true }
     },
     "warning": {
-      name: "??+頝霅血? (WARNING)",
+      name: "偏壓+距離警告 (WARNING)",
       status: "WARNING",
       reason: "pressure_shift_and_tof_abnormal",
-      reasonZh: "憯???銝??寞葫頝撣賂????冽??賡◢??,
+      reasonZh: "壓力偏斜且前方測距異常，有潛在滑落風險",
       direction: "front",
       device_id: "chair_01",
       connection: "ONLINE",
@@ -78,10 +79,10 @@
       sensor_health: { fsr: true, tof: true, environment: true }
     },
     "emergency": {
-      name: "?湧?皛/頝?(EMERGENCY)",
+      name: "嚴重滑落/跌倒 (EMERGENCY)",
       status: "EMERGENCY",
       reason: "pressure_and_tof_severely_abnormal",
-      reasonZh: "憭?皜砍鈭文??文?嚗??仿瘚仃銝??Ｗ??撣賂??航撌脫??踝?",
+      reasonZh: "多感測器交叉判定：壓力急遽流失且距離劇烈異常，可能已滑落！",
       direction: "front",
       device_id: "chair_01",
       connection: "ONLINE",
@@ -92,10 +93,10 @@
       sensor_health: { fsr: true, tof: true, environment: true }
     },
     "sensor-offline": {
-      name: "?葫?冽???(SENSOR_ERROR)",
+      name: "感測器故障 (SENSOR_ERROR)",
       status: "SENSOR_ERROR",
       reason: "required_sensor_unavailable",
-      reasonZh: "敹??葫??(FSR/ToF) 閮?銝剜??憯?,
+      reasonZh: "必要感測器 (FSR/ToF) 訊號中斷或損壞",
       direction: null,
       device_id: "chair_01",
       connection: "ONLINE",
@@ -106,10 +107,10 @@
       sensor_health: { fsr: false, tof: false, environment: false }
     },
     "offline": {
-      name: "閮剖??Ｙ? (OFFLINE)",
+      name: "設備離線 (OFFLINE)",
       status: "OFFLINE",
       reason: "heartbeat_timeout",
-      reasonZh: "頞? 5 蝘?嗅 ESP32-S3 敹歲??皜砍???,
+      reasonZh: "超過 5 秒未收到 ESP32-S3 心跳與感測封包",
       direction: null,
       device_id: "chair_01",
       connection: "OFFLINE",
@@ -121,34 +122,36 @@
     }
   };
 
-  // ??蕃霅臬???  const STATUS_DICT = {
-    NORMAL: { title: "甇?虜???(NORMAL)", class: "normal", bannerDesc: "雿輻??憪踹像蝛抬???憯????﹛嚗??寡??Ｚ??啣??葫?券?雿憟賬? },
-    CAUTION: { title: "?閬???(CAUTION)", class: "caution", bannerDesc: "?葫?典皜砍憪踹敺桀??宏?葫頝凝撟??堆?隢憿扯????? },
-    WARNING: { title: "摰霅血? (WARNING)", class: "warning", bannerDesc: "??憯????寡??Ｗ????Ｗ皞?瑼鳴??航?喳?皛???憪蹂?蝛抬?" },
-    EMERGENCY: { title: "蝺亦?瘜?(EMERGENCY)", class: "emergency", bannerDesc: "憭?皜砍鈭文??文??之?啣虜嚗蝙?刻?賢歇蝬??賣??Ｘ?頝?隢??喟Ⅱ隤?" },
-    SENSOR_ERROR: { title: "?葫?冽???(SENSOR_ERROR)", class: "error", bannerDesc: "蝖祇??辣??蝺??啣虜嚗?瑼Ｖ耨璊? FSR ??ToF 皜祈?璅∠??? },
-    OFFLINE: { title: "閮剖?撌脤蝺?(OFFLINE)", class: "offline", bannerDesc: "閮剖???銝剜嚗????敺?蝑?皜祈???隢炎??Wi-Fi ?皞? }
+  // 狀態翻譯對照
+  const STATUS_DICT = {
+    NORMAL: { title: "正常狀態 (NORMAL)", class: "normal", bannerDesc: "使用者坐姿平穩，四點壓力分佈均衡，前方距離與環境感測器運作良好。" },
+    CAUTION: { title: "需要留意 (CAUTION)", class: "caution", bannerDesc: "感測器偵測到姿勢微幅偏移或測距微幅變異，請照顧者稍加留意。" },
+    WARNING: { title: "安全警告 (WARNING)", class: "warning", bannerDesc: "四點壓力與前方距離同時偏離基準門檻，可能即將滑動或坐姿不穩！" },
+    EMERGENCY: { title: "緊急狀況 (EMERGENCY)", class: "emergency", bannerDesc: "多感測器交叉判定重大異常！使用者可能已經滑落椅面或跌倒，請立即確認！" },
+    SENSOR_ERROR: { title: "感測器故障 (SENSOR_ERROR)", class: "error", bannerDesc: "硬體元件或排線通訊異常，請檢修椅墊 FSR 或 ToF 測距模組。" },
+    OFFLINE: { title: "設備已離線 (OFFLINE)", class: "offline", bannerDesc: "設備通訊中斷，目前保留最後一筆遙測資料；請檢查 Wi-Fi 與電源。" }
   };
 
   const REASON_ZH = {
-    pressure_and_tof_normal: "憯??葫頝??典??典皞??",
-    pressure_shift_only: "?菜葫?啣?憪踹???憿臬?蝘?,
-    tof_abnormal_only: "? ToF 皜祈??詨澆??Ｘ迤撣訾?????,
-    pressure_shift_and_tof_abnormal: "憯???銝??寞葫頝撣賂??撮皛宏",
-    pressure_and_tof_severely_abnormal: "?踹?璆萄漲憭梯﹛銝??Ｗ??憭?(?航皛)",
-    required_sensor_unavailable: "敹??葫?辣?桀??⊥?????,
-    heartbeat_timeout: "頞??Ｙ??瑼餅?嗅?葫敹歲撠?"
+    pressure_and_tof_normal: "壓力與測距均在安全基準範圍內",
+    pressure_shift_only: "偵測到坐姿壓力明顯偏移",
+    tof_abnormal_only: "前方 ToF 測距數值偏離正常乘坐距離",
+    pressure_shift_and_tof_abnormal: "壓力偏斜且前方測距異常，疑似滑移",
+    pressure_and_tof_severely_abnormal: "承壓極度失衡且距離劇烈擴大 (可能滑落)",
+    required_sensor_unavailable: "必要感測元件目前無有效資料",
+    heartbeat_timeout: "超過離線門檻未收到感測心跳封包"
   };
 
   const DIRECTION_ZH = {
-    front: "? (Front)",
-    back: "敺趕 (Back)",
-    left: "撌血 (Left)",
-    right: "?喳 (Right)",
-    null: "撟喟帘?∪?蝘?
+    front: "前傾 (Front)",
+    back: "後仰 (Back)",
+    left: "左傾 (Left)",
+    right: "右傾 (Right)",
+    null: "平穩無偏移"
   };
 
-  // ??恣??  let currentScenarioKey = "normal";
+  // 狀態管理
+  let currentScenarioKey = "normal";
   let activeState = JSON.parse(JSON.stringify(SCENARIOS["normal"]));
   let sequenceNumber = 125;
   let isLiveStreaming = true;
@@ -156,14 +159,15 @@
   let apiPollingTimer = null;
   let isApiMode = false;
 
-  // DOM ?豢??典翰??  const $ = (id) => document.getElementById(id);
+  // DOM 選擇器快取
+  const $ = (id) => document.getElementById(id);
 
   function formatTime(date) {
     const d = date || new Date();
     return d.toTimeString().split(" ")[0];
   }
 
-  // 2. 閬?撘? (璅⊥ status-engine / rules.py 閰??摩)
+  // 2. 規則引擎 (模擬 status-engine / rules.py 評定邏輯)
   function evaluateTelemetry(data) {
     const health = data.sensor_health;
     if (!health.fsr || !health.tof) {
@@ -234,30 +238,33 @@
     };
   }
 
-  // 3. UI 皜脫?撘?
+  // 3. UI 渲染引擎
   function renderDashboard(state) {
     const timeStr = formatTime();
     $("last-updated").textContent = timeStr;
     $("seq-counter").textContent = sequenceNumber;
     $("banner-timestamp").textContent = timeStr;
 
-    // ?????摰?    const isOffline = state.connection === "OFFLINE";
-    const connStatusText = isOffline ? "閮剖?撌脤蝺?(OFFLINE)" : "閮剖??函? (ONLINE)";
+    // 連線狀態判定
+    const isOffline = state.connection === "OFFLINE";
+    const connStatusText = isOffline ? "設備已離線 (OFFLINE)" : "設備在線 (ONLINE)";
     $("conn-status-text").textContent = connStatusText;
     $("conn-dot").className = "dot " + (isOffline ? "dot-offline" : "dot-online");
 
-    // ???蝝?摰?    let currentStatus = isOffline ? "OFFLINE" : state.status;
+    // 狀態等級評定
+    let currentStatus = isOffline ? "OFFLINE" : state.status;
     const meta = STATUS_DICT[currentStatus] || STATUS_DICT["NORMAL"];
 
-    // ?璈怠? (Banner)
+    // 頂部橫幅 (Banner)
     const banner = $("status-banner");
     banner.className = "status-banner banner-" + meta.class;
     $("banner-title").textContent = meta.title;
     $("banner-code").textContent = currentStatus;
     $("banner-desc").textContent = state.reasonZh || meta.bannerDesc;
-    $("banner-icon").textContent = currentStatus === "NORMAL" ? "?? : currentStatus === "OFFLINE" ? "?? : "!";
+    $("banner-icon").textContent = currentStatus === "NORMAL" ? "✓" : currentStatus === "OFFLINE" ? "✕" : "!";
 
-    // Hero ????    $("hero-status-title").textContent = meta.title;
+    // Hero 狀態卡片
+    $("hero-status-title").textContent = meta.title;
     $("hero-status-title").className = "status-text-" + meta.class;
     $("hero-reason-text").textContent = state.reasonZh || REASON_ZH[state.reason] || state.reason;
     $("hero-reason-code").textContent = "(" + state.reason + ")";
@@ -267,27 +274,29 @@
     orb.className = "status-orb orb-" + meta.class;
     $("orb-icon").textContent = currentStatus === "NORMAL" ? "OK" : currentStatus === "EMERGENCY" ? "SOS" : "!";
 
-    // Evidence & ???孵?
-    $("ev-direction").textContent = DIRECTION_ZH[state.direction] || "撟喟帘?∪?蝘?;
+    // Evidence & 重心方向
+    $("ev-direction").textContent = DIRECTION_ZH[state.direction] || "平穩無偏移";
 
     const fsr = state.fsr || {};
     const totalP = (fsr.front || 0) + (fsr.back || 0) + (fsr.left || 0) + (fsr.right || 0);
-    $("ev-total-pressure").textContent = (state.sensor_health && state.sensor_health.fsr) ? totalP + " raw" : "?⊥?";
+    $("ev-total-pressure").textContent = (state.sensor_health && state.sensor_health.fsr) ? totalP + " raw" : "無效";
 
-    // FSR 4暺?潸??脣漲璇?    ["front", "back", "left", "right"].forEach(pos => {
+    // FSR 4點數值與進度條
+    ["front", "back", "left", "right"].forEach(pos => {
       const val = fsr[pos];
-      const valText = val !== null && val !== undefined ? val : "??;
+      const valText = val !== null && val !== undefined ? val : "—";
       const pct = val !== null && val !== undefined ? Math.min(100, Math.round((val / 4095) * 100)) : 0;
 
       $(`fsr-val-${pos}`).textContent = valText;
       $(`adc-${pos}`).textContent = valText + (val !== null ? " raw" : "");
       $(`fsr-bar-${pos}`).style.width = pct + "%";
 
-      const share = totalP > 0 && val !== null ? ((val / totalP) * 100).toFixed(1) + "%" : "??;
+      const share = totalP > 0 && val !== null ? ((val / totalP) * 100).toFixed(1) + "%" : "—";
       $(`pct-${pos}`).textContent = share;
     });
 
-    // ?? / 撌血??璇?    const f = fsr.front || 0, b = fsr.back || 0, l = fsr.left || 0, r = fsr.right || 0;
+    // 前後 / 左右配比條
+    const f = fsr.front || 0, b = fsr.back || 0, l = fsr.left || 0, r = fsr.right || 0;
     const fbTotal = f + b;
     const lrTotal = l + r;
 
@@ -303,18 +312,18 @@
     $("ratio-lr-fill").style.width = lRatio + "%";
 
     const maxRatioVal = Math.max(fRatio, bRatio, lRatio, rRatio);
-    $("ev-max-ratio").textContent = (state.sensor_health && state.sensor_health.fsr) ? maxRatioVal.toFixed(1) + "%" : "??;
+    $("ev-max-ratio").textContent = (state.sensor_health && state.sensor_health.fsr) ? maxRatioVal.toFixed(1) + "%" : "—";
 
-    // ??暺?(CoP) 閬死摨扳?
-    // X 頠? 0 (撌? ~ 100 (??
-    // Y 頠? 0 (敺? ~ 100 (??
+    // 重心點 (CoP) 視覺座標
     const copDot = $("cop-dot");
-    const copX = Math.max(15, Math.min(85, (rRatio))); // ?喲?憭批? X 敺??    const copY = Math.max(15, Math.min(85, (fRatio))); // ??憭批? Y 敺??(銝)
+    const copX = Math.max(15, Math.min(85, (rRatio))); // 右邊大則 X 往右
+    const copY = Math.max(15, Math.min(85, (fRatio))); // 前邊大則 Y 往前
     copDot.style.left = copX + "%";
     copDot.style.top = copY + "%";
 
-    // ToF 頝?葫??    const dist = state.distance_mm;
-    $("metric-distance").textContent = dist !== null && dist !== undefined ? dist : "??;
+    // ToF 距離感測器
+    const dist = state.distance_mm;
+    $("metric-distance").textContent = dist !== null && dist !== undefined ? dist : "—";
     const tofGaugePointer = $("tof-indicator");
     if (dist !== null && dist !== undefined) {
       const clampedDist = Math.max(0, Math.min(1200, dist));
@@ -323,30 +332,32 @@
       tofGaugePointer.style.display = "block";
 
       if (dist < 550) {
-        $("ev-tof-level").textContent = "摰甇?虜";
+        $("ev-tof-level").textContent = "安全正常";
         $("ev-tof-level").className = "ev-val text-success";
-        $("distance-status-desc").textContent = "?頝?璅?摰銋?蝭? (400 ~ 500 mm)";
+        $("distance-status-desc").textContent = "前方距離處於標準安全乘坐範圍 (400 ~ 500 mm)";
       } else if (dist < 750) {
-        $("ev-tof-level").textContent = "頛漲?? (瘜冽?)";
+        $("ev-tof-level").textContent = "輕度偏遠 (注意)";
         $("ev-tof-level").className = "ev-val text-caution";
-        $("distance-status-desc").textContent = "?皜祈??亙凝?之嚗釣??血??????芸?";
+        $("distance-status-desc").textContent = "前方測距略微偏大，注意是否往前或向後挪動";
       } else {
-        $("ev-tof-level").textContent = "?湧??啣虜 (霅血?)";
+        $("ev-tof-level").textContent = "嚴重異常 (警告)";
         $("ev-tof-level").className = "ev-val text-emergency";
-        $("distance-status-desc").textContent = "?皜祈??湧?頞?嚗蝙?刻?賢歇?ａ?摨扳?????;
+        $("distance-status-desc").textContent = "前方測距嚴重超標！使用者可能已離開座椅或滑落";
       }
     } else {
       tofGaugePointer.style.display = "none";
-      $("ev-tof-level").textContent = "?∟???;
-      $("distance-status-desc").textContent = "ToF 皜祈?璅∠?閮??箏仃????;
+      $("ev-tof-level").textContent = "無訊號";
+      $("distance-status-desc").textContent = "ToF 測距模組訊號遺失或關閉";
     }
 
-    // 皞急?摨?    $("metric-temp").textContent = state.temperature_c !== null ? Number(state.temperature_c).toFixed(1) : "??;
-    $("metric-humidity").textContent = state.humidity_percent !== null ? Number(state.humidity_percent).toFixed(1) : "??;
+    // 溫濕度
+    $("metric-temp").textContent = state.temperature_c !== null ? Number(state.temperature_c).toFixed(1) : "—";
+    $("metric-humidity").textContent = state.humidity_percent !== null ? Number(state.humidity_percent).toFixed(1) : "—";
 
-    // ?葫?典摨瑞???蝐?    setHealthBadge("health-fsr", state.sensor_health && state.sensor_health.fsr, "4暺?FSR 璅∠?甇?虜", "FSR 霈?撣?);
-    setHealthBadge("health-tof", state.sensor_health && state.sensor_health.tof, "ToF 皜祈?甇?虜", "ToF ??銝剜");
-    setHealthBadge("health-env", state.sensor_health && state.sensor_health.environment, "?啣??葫甇?虜", "?啣??葫?啣虜");
+    // 感測器健康狀態標籤
+    setHealthBadge("health-fsr", state.sensor_health && state.sensor_health.fsr, "4點 FSR 模組正常", "FSR 讀取異常");
+    setHealthBadge("health-tof", state.sensor_health && state.sensor_health.tof, "ToF 測距正常", "ToF 故障中斷");
+    setHealthBadge("health-env", state.sensor_health && state.sensor_health.environment, "環境感測正常", "環境感測異常");
   }
 
   function setHealthBadge(id, isOk, okText, errText) {
@@ -358,12 +369,12 @@
       el.textContent = errText;
       el.className = "chip chip-danger";
     } else {
-      el.textContent = "?芸皜?;
+      el.textContent = "未偵測";
       el.className = "chip chip-warning";
     }
   }
 
-  // 4. 鈭辣甇瑞?閮?
+  // 4. 事件歷程記錄
   function logEvent(status, title, desc) {
     const list = $("event-log-list");
     const meta = STATUS_DICT[status] || STATUS_DICT["NORMAL"];
@@ -379,12 +390,13 @@
     `;
     list.insertBefore(li, list.firstChild);
 
-    // ?憭???12 蝑?    while (list.children.length > 12) {
+    // 最多保留 12 筆
+    while (list.children.length > 12) {
       list.removeChild(list.lastChild);
     }
   }
 
-  // 5. ??璅⊥閮??潛???(?凝撠璈??
+  // 5. 動態模擬訊號發生器 (加微小隨機擾動)
   function applySensorJitter(baseState) {
     if (baseState.status === "SENSOR_ERROR" || baseState.connection === "OFFLINE") {
       return baseState;
@@ -392,7 +404,7 @@
     const cloned = JSON.parse(JSON.stringify(baseState));
     sequenceNumber++;
 
-    // FSR 頛凝?? (簣25 raw)
+    // FSR 輕微晃動 (±25 raw)
     for (const key of Object.keys(cloned.fsr)) {
       if (cloned.fsr[key] !== null) {
         const noise = Math.floor((Math.random() - 0.5) * 50);
@@ -400,20 +412,21 @@
       }
     }
 
-    // ToF 頛凝?? (簣8 mm)
+    // ToF 輕微晃動 (±8 mm)
     if (cloned.distance_mm !== null) {
       const noise = Math.floor((Math.random() - 0.5) * 16);
       cloned.distance_mm = Math.max(100, cloned.distance_mm + noise);
     }
 
-    // 皞急?摨西?敺桀凝??    if (cloned.temperature_c !== null) {
+    // 溫濕度輕微微動
+    if (cloned.temperature_c !== null) {
       cloned.temperature_c = Number((cloned.temperature_c + (Math.random() - 0.5) * 0.1).toFixed(1));
     }
     if (cloned.humidity_percent !== null) {
       cloned.humidity_percent = Number((cloned.humidity_percent + (Math.random() - 0.5) * 0.2).toFixed(1));
     }
 
-    // ?憟閬???
+    // 重新套用規則分類
     const evalRes = evaluateTelemetry(cloned);
     cloned.status = evalRes.status;
     cloned.reason = evalRes.reason;
@@ -423,13 +436,13 @@
     return cloned;
   }
 
-  // 6. ????
+  // 6. 情境切換
   function setScenario(key) {
     currentScenarioKey = key;
     activeState = JSON.parse(JSON.stringify(SCENARIOS[key]));
     sequenceNumber++;
 
-    // ?湔??璅??
+    // 更新按鈕樣式
     document.querySelectorAll(".btn-scenario").forEach(btn => {
       btn.classList.toggle("active", btn.getAttribute("data-scenario") === key);
     });
@@ -438,7 +451,8 @@
     logEvent(activeState.status, activeState.name, activeState.reasonZh || activeState.reason);
   }
 
-  // 7. ??銝脫?摰???  function startLiveStream() {
+  // 7. 動態串流定時器
+  function startLiveStream() {
     if (streamTimer) clearInterval(streamTimer);
     streamTimer = setInterval(() => {
       if (!isLiveStreaming || isApiMode) return;
@@ -447,7 +461,7 @@
     }, 500);
   }
 
-  // 8. ??敺垢 API 璅∪? (?舫)
+  // 8. 連接後端 API 模式 (可選)
   async function pollBackendApi() {
     const baseUrl = $("api-base-url").value.trim().replace(/\/$/, "");
     try {
@@ -462,7 +476,7 @@
         const evalRes = evaluateTelemetry(telemetry);
 
         activeState = {
-          name: "API ?單??葫",
+          name: "API 即時遙測",
           status: d.status || evalRes.status,
           reason: d.reason || evalRes.reason,
           reasonZh: REASON_ZH[d.reason] || d.reason,
@@ -477,7 +491,7 @@
         };
         sequenceNumber = telemetry.sequence || sequenceNumber + 1;
         renderDashboard(activeState);
-        $("mode-badge").textContent = "API ???璅∪?";
+        $("mode-badge").textContent = "API 連線模式";
         $("mode-badge").style.borderColor = "var(--status-normal)";
       }
     } catch (err) {
@@ -485,9 +499,9 @@
     }
   }
 
-  // 9. 鈭辣蝬???憪?
+  // 9. 事件綁定與初始化
   function init() {
-    // 蝬?????
+    // 綁定情境按鈕
     document.querySelectorAll(".btn-scenario").forEach(btn => {
       btn.addEventListener("click", () => {
         const key = btn.getAttribute("data-scenario");
@@ -495,48 +509,48 @@
       });
     });
 
-    // 蝬???銝脫???
+    // 綁定動態串流開關
     $("live-stream-toggle").addEventListener("change", (e) => {
       isLiveStreaming = e.target.checked;
     });
 
-    // 蝬?皜閮???
+    // 綁定清除記錄按鈕
     $("btn-clear-events").addEventListener("click", () => {
       $("event-log-list").innerHTML = "";
     });
 
-    // 蝬? API ???????
+    // 綁定 API 連線切換按鈕
     $("btn-connect-api").addEventListener("click", async () => {
       const btn = $("btn-connect-api");
-      btn.textContent = "???銝?..";
+      btn.textContent = "連線中...";
       const baseUrl = $("api-base-url").value.trim().replace(/\/$/, "");
       try {
         const health = await fetch(baseUrl + "/api/health").then(r => r.json());
         if (health.ok) {
           isApiMode = true;
-          btn.textContent = "??撌脤? API";
-          $("mode-badge").textContent = "API ???銝?;
+          btn.textContent = "✓ 已連接 API";
+          $("mode-badge").textContent = "API 連線中";
           if (apiPollingTimer) clearInterval(apiPollingTimer);
           apiPollingTimer = setInterval(pollBackendApi, 1000);
           pollBackendApi();
-          logEvent("NORMAL", "撌脫???敺垢 API", "甇??蝥 " + baseUrl + " 頛芾岷??唳?皜砍???);
+          logEvent("NORMAL", "已成功連接後端 API", "正持續自 " + baseUrl + " 輪詢最新感測封包");
         } else {
-          throw new Error("API 銝摨?);
+          throw new Error("API 不健康");
         }
       } catch (err) {
-        btn.textContent = "???憭望? (蝬剜?璅⊥)";
-        logEvent("SENSOR_ERROR", "敺垢 API ???憭望?", "隢Ⅱ隤璈?API (127.0.0.1:8000) ?臬??嚗?雁?芋?祆芋撘?);
-        setTimeout(() => { btn.textContent = "????API ???"; }, 2500);
+        btn.textContent = "連線失敗 (維持模擬)";
+        logEvent("SENSOR_ERROR", "後端 API 連線失敗", "請確認本機 API (127.0.0.1:8000) 是否啟動，目前維持模擬模式。");
+        setTimeout(() => { btn.textContent = "切換至 API 連線"; }, 2500);
       }
     });
 
-    // ?活頛
+    // 初次載入
     renderDashboard(activeState);
-    logEvent("NORMAL", "蝟餌絞???停蝺?, "頛?身甇?虜?尿嚗?憪?500ms ?單??葫銝脫?");
+    logEvent("NORMAL", "系統初始化就緒", "載入預設正常坐姿，開始 500ms 即時遙測串流");
     startLiveStream();
   }
 
-  // ???蝔?
+  // 啟動應用程式
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", init);
   } else {
