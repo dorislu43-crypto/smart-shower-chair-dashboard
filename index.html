@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>?箸瘣鴃璊?繚 閮剖??單???銝剖?</title>
+  <title>智慧洗澡椅 · 設備即時監控中心</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;600;700;900&display=swap" rel="stylesheet">
@@ -23,20 +23,20 @@
           </svg>
         </div>
         <div class="brand-text">
-          <div class="brand-eyebrow">SMART ASSISTIVE IOT 繚 TELEMETRY MONITOR</div>
-          <h1>?箸瘣鴃璊?繚 閮剖?蝡臬??找葉敹?/h1>
+          <div class="brand-eyebrow">SMART ASSISTIVE IOT · TELEMETRY MONITOR</div>
+          <h1>智慧洗澡椅 · 設備端即時監控中心</h1>
         </div>
       </div>
 
       <!-- Device Meta & Connection State -->
       <div class="device-status-cluster">
         <div class="device-chip">
-          <span class="chip-label">鋆蔭 ID</span>
+          <span class="chip-label">裝置 ID</span>
           <strong id="device-id-badge" class="chip-val font-mono">chair_01</strong>
         </div>
         <div class="device-chip">
-          <span class="chip-label">????</span>
-          <span class="chip-val font-mono">ESP32-S3 繚 v0.1.0</span>
+          <span class="chip-label">通訊韌體</span>
+          <span class="chip-val font-mono">ESP32-S3 · v0.1.0</span>
         </div>
         <div class="connection-card">
           <div class="conn-dot-wrapper">
@@ -45,13 +45,13 @@
           </div>
           <div class="conn-info">
             <div class="conn-main">
-              <strong id="conn-status-text">閮剖??函? (ONLINE)</strong>
-              <span id="mode-badge" class="mode-badge">?單?璅⊥</span>
+              <strong id="conn-status-text">設備在線 (ONLINE)</strong>
+              <span id="mode-badge" class="mode-badge">即時模擬</span>
             </div>
             <div class="conn-sub">
-              <span>?敺?? <span id="last-updated" class="font-mono">--:--:--</span></span>
-              <span class="dot-separator">??/span>
-              <span>摨?: #<span id="seq-counter" class="font-mono">1</span></span>
+              <span>最後更新: <span id="last-updated" class="font-mono">--:--:--</span></span>
+              <span class="dot-separator">•</span>
+              <span>序號: #<span id="seq-counter" class="font-mono">1</span></span>
             </div>
           </div>
         </div>
@@ -65,16 +65,17 @@
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
             <polygon points="5 3 19 12 5 21 5 3"></polygon>
           </svg>
-          ??璅⊥敹恍???        </span>
+          情境模擬快速切換
+        </span>
         <div class="scenario-buttons">
-          <button type="button" class="btn-scenario active" data-scenario="normal">1. 甇?虜?尿</button>
-          <button type="button" class="btn-scenario" data-scenario="front-pressure">2. ??? (瘜冽?)</button>
-          <button type="button" class="btn-scenario" data-scenario="left-right-imbalance">3. 撌血銝像銵?(瘜冽?)</button>
-          <button type="button" class="btn-scenario" data-scenario="distance-abnormal">4. 頝?啣虜 (瘜冽?)</button>
-          <button type="button" class="btn-scenario" data-scenario="warning">5. ??+頝霅血?</button>
-          <button type="button" class="btn-scenario" data-scenario="emergency">6. ?湧?皛/頝?(蝺?</button>
-          <button type="button" class="btn-scenario" data-scenario="sensor-offline">7. ?葫?冽???/button>
-          <button type="button" class="btn-scenario" data-scenario="offline">8. 閮剖??Ｙ?</button>
+          <button type="button" class="btn-scenario active" data-scenario="normal">1. 正常坐姿</button>
+          <button type="button" class="btn-scenario" data-scenario="front-pressure">2. 前側偏壓 (注意)</button>
+          <button type="button" class="btn-scenario" data-scenario="left-right-imbalance">3. 左右不平衡 (注意)</button>
+          <button type="button" class="btn-scenario" data-scenario="distance-abnormal">4. 距離異常 (注意)</button>
+          <button type="button" class="btn-scenario" data-scenario="warning">5. 偏壓+距離警告</button>
+          <button type="button" class="btn-scenario" data-scenario="emergency">6. 嚴重滑落/跌倒 (緊急)</button>
+          <button type="button" class="btn-scenario" data-scenario="sensor-offline">7. 感測器故障</button>
+          <button type="button" class="btn-scenario" data-scenario="offline">8. 設備離線</button>
         </div>
       </div>
 
@@ -82,7 +83,7 @@
         <label class="toggle-switch">
           <input type="checkbox" id="live-stream-toggle" checked>
           <span class="slider"></span>
-          <span class="toggle-label">???單?銝脫? (500ms)</span>
+          <span class="toggle-label">動態即時串流 (500ms)</span>
         </label>
       </div>
     </section>
@@ -90,17 +91,17 @@
     <!-- Active Status Alert Banner -->
     <div id="status-banner" class="status-banner banner-normal">
       <div class="banner-icon-box">
-        <span id="banner-icon">??/span>
+        <span id="banner-icon">✓</span>
       </div>
       <div class="banner-content">
         <div class="banner-heading">
-          <strong id="banner-title">蝟餌絞??迤撣?繚 ??葫?脰?銝?/strong>
+          <strong id="banner-title">系統狀態正常 · 監測進行中</strong>
           <span id="banner-code" class="status-tag font-mono">NORMAL</span>
         </div>
-        <p id="banner-desc">雿輻??憪踹像蝛抬???憯????﹛嚗??寡??Ｚ??啣??葫?券?雿憟賬?/p>
+        <p id="banner-desc">使用者坐姿平穩，四點壓力分佈均衡，前方距離與環境感測器運作良好。</p>
       </div>
       <div class="banner-time">
-        <span class="time-label">閮箸??</span>
+        <span class="time-label">診斷時間</span>
         <span id="banner-timestamp" class="font-mono">--:--:--</span>
       </div>
     </div>
@@ -116,7 +117,7 @@
           <div class="card-header">
             <div>
               <span class="card-eyebrow">SYSTEM SAFETY ENGINE</span>
-              <h2>?單?摰?脰風???/h2>
+              <h2>即時安全防護狀態</h2>
             </div>
             <span id="rule-engine-tag" class="chip chip-success font-mono">RULE-ENGINE ACTIVE</span>
           </div>
@@ -124,11 +125,11 @@
           <div class="hero-body">
             <div class="hero-status-display">
               <div class="hero-text-block">
-                <span class="hero-sub">?湧?憸券蝑??文?</span>
-                <h3 id="hero-status-title" class="status-text-normal">甇?虜???(NORMAL)</h3>
+                <span class="hero-sub">整體風險等級判定</span>
+                <h3 id="hero-status-title" class="status-text-normal">正常狀態 (NORMAL)</h3>
                 <div class="hero-reason-box">
-                  <span class="reason-label">?斗??:</span>
-                  <strong id="hero-reason-text">憯??葫頝??典??典皞??</strong>
+                  <span class="reason-label">判斷原因:</span>
+                  <strong id="hero-reason-text">壓力與測距均在安全基準範圍內</strong>
                   <span id="hero-reason-code" class="font-mono text-muted">(pressure_and_tof_normal)</span>
                 </div>
               </div>
@@ -148,20 +149,20 @@
             <!-- Evidence Breakdown Footer -->
             <div class="evidence-grid">
               <div class="evidence-item">
-                <span class="ev-label">銝餉????孵?</span>
-                <strong id="ev-direction" class="ev-val">撟喟帘?∪?蝘?/strong>
+                <span class="ev-label">主要偏壓方向</span>
+                <strong id="ev-direction" class="ev-val">平穩無偏移</strong>
               </div>
               <div class="evidence-item">
-                <span class="ev-label">?憭批?憯???/span>
+                <span class="ev-label">最大偏壓比率</span>
                 <strong id="ev-max-ratio" class="ev-val font-mono">50.0%</strong>
               </div>
               <div class="evidence-item">
-                <span class="ev-label">蝮賣頛???/span>
+                <span class="ev-label">總承載壓力值</span>
                 <strong id="ev-total-pressure" class="ev-val font-mono">6000 raw</strong>
               </div>
               <div class="evidence-item">
-                <span class="ev-label">ToF 頝蝑?</span>
-                <strong id="ev-tof-level" class="ev-val text-success">摰甇?虜</strong>
+                <span class="ev-label">ToF 距離等級</span>
+                <strong id="ev-tof-level" class="ev-val text-success">安全正常</strong>
               </div>
             </div>
           </div>
@@ -171,10 +172,10 @@
         <div class="card distance-card">
           <div class="card-header">
             <div>
-              <span class="card-eyebrow">OPTICAL SENSOR 繚 ToF</span>
-              <h2>?頝?葫</h2>
+              <span class="card-eyebrow">OPTICAL SENSOR · ToF</span>
+              <h2>前方距離量測</h2>
             </div>
-            <span id="health-tof" class="chip chip-success">ToF ?葫甇?虜</span>
+            <span id="health-tof" class="chip chip-success">ToF 感測正常</span>
           </div>
 
           <div class="distance-body">
@@ -183,15 +184,15 @@
                 <span id="metric-distance">420</span>
                 <span class="metric-unit">mm</span>
               </div>
-              <p id="distance-status-desc" class="metric-hint">?頝?璅?摰銋?蝭? (400 ~ 500 mm)</p>
+              <p id="distance-status-desc" class="metric-hint">前方距離處於標準安全乘坐範圍 (400 ~ 500 mm)</p>
             </div>
 
             <!-- Custom Gauge Bar -->
             <div class="tof-gauge-wrapper">
               <div class="tof-gauge-labels">
                 <span>0 mm</span>
-                <span class="zone-mark">400 (甇?虜)</span>
-                <span class="zone-mark">650 (霅行?)</span>
+                <span class="zone-mark">400 (正常)</span>
+                <span class="zone-mark">650 (警戒)</span>
                 <span>1200+ mm</span>
               </div>
               <div class="tof-gauge-track">
@@ -205,8 +206,8 @@
             </div>
 
             <div class="sensor-specs-footer">
-              <span>?葫?辣: VL53L0X / VL53L1X</span>
-              <span>?見?望?: 500ms (QoS 0)</span>
+              <span>感測元件: VL53L0X / VL53L1X</span>
+              <span>取樣週期: 500ms (QoS 0)</span>
             </div>
           </div>
         </div>
@@ -221,10 +222,10 @@
           <div class="card-header">
             <div>
               <span class="card-eyebrow">PRESSURE SENSING ARRAY</span>
-              <h2>璊???憯????拚 (FSR)</h2>
+              <h2>椅墊四點壓力分佈矩陣 (FSR)</h2>
             </div>
             <div class="header-tools">
-              <span id="health-fsr" class="chip chip-success">4暺?FSR 璅∠?甇?虜</span>
+              <span id="health-fsr" class="chip chip-success">4點 FSR 模組正常</span>
             </div>
           </div>
 
@@ -232,18 +233,18 @@
             <!-- Seat Visual Representation Diagram -->
             <div class="chair-diagram-wrapper">
               <div class="chair-silhouette">
-                <div class="chair-back-rest">璊??孵? (Back)</div>
+                <div class="chair-back-rest">椅背方向 (Back)</div>
                 <div class="chair-seat-cushion">
                   <!-- Back Sensor Node -->
                   <div class="sensor-node node-back" data-pos="back">
-                    <span class="node-title">敺 (Back)</span>
+                    <span class="node-title">後側 (Back)</span>
                     <strong id="fsr-val-back" class="node-val font-mono">1500</strong>
                     <div class="node-bar-container"><div id="fsr-bar-back" class="node-bar" style="width: 36%;"></div></div>
                   </div>
 
                   <!-- Left Sensor Node -->
                   <div class="sensor-node node-left" data-pos="left">
-                    <span class="node-title">撌血 (Left)</span>
+                    <span class="node-title">左側 (Left)</span>
                     <strong id="fsr-val-left" class="node-val font-mono">1500</strong>
                     <div class="node-bar-container"><div id="fsr-bar-left" class="node-bar" style="width: 36%;"></div></div>
                   </div>
@@ -251,24 +252,24 @@
                   <!-- Center Balance Crosshair -->
                   <div class="center-crosshair">
                     <div id="cop-dot" class="center-of-pressure" style="top: 50%; left: 50%;"></div>
-                    <span class="cop-label">??暺?(CoP)</span>
+                    <span class="cop-label">重心點 (CoP)</span>
                   </div>
 
                   <!-- Right Sensor Node -->
                   <div class="sensor-node node-right" data-pos="right">
-                    <span class="node-title">?喳 (Right)</span>
+                    <span class="node-title">右側 (Right)</span>
                     <strong id="fsr-val-right" class="node-val font-mono">1500</strong>
                     <div class="node-bar-container"><div id="fsr-bar-right" class="node-bar" style="width: 36%;"></div></div>
                   </div>
 
                   <!-- Front Sensor Node -->
                   <div class="sensor-node node-front" data-pos="front">
-                    <span class="node-title">? (Front)</span>
+                    <span class="node-title">前側 (Front)</span>
                     <strong id="fsr-val-front" class="node-val font-mono">1500</strong>
                     <div class="node-bar-container"><div id="fsr-bar-front" class="node-bar" style="width: 36%;"></div></div>
                   </div>
                 </div>
-                <div class="chair-front-edge">??楠 (Front)</div>
+                <div class="chair-front-edge">前方邊緣 (Front)</div>
               </div>
             </div>
 
@@ -276,7 +277,7 @@
             <div class="fsr-ratios-panel">
               <div class="ratio-card">
                 <div class="ratio-header">
-                  <span>???? (Front / Back)</span>
+                  <span>前後配比 (Front / Back)</span>
                   <strong id="ratio-fb-text" class="font-mono">50.0% : 50.0%</strong>
                 </div>
                 <div class="bipolar-bar">
@@ -286,7 +287,7 @@
 
               <div class="ratio-card">
                 <div class="ratio-header">
-                  <span>撌血?? (Left / Right)</span>
+                  <span>左右配比 (Left / Right)</span>
                   <strong id="ratio-lr-text" class="font-mono">50.0% : 50.0%</strong>
                 </div>
                 <div class="bipolar-bar">
@@ -296,22 +297,22 @@
 
               <div class="adc-readings-table">
                 <div class="adc-row">
-                  <span class="sensor-name">? (Front)</span>
+                  <span class="sensor-name">前側 (Front)</span>
                   <span id="adc-front" class="adc-num font-mono">1500 raw</span>
                   <span class="adc-percent font-mono" id="pct-front">25.0%</span>
                 </div>
                 <div class="adc-row">
-                  <span class="sensor-name">敺 (Back)</span>
+                  <span class="sensor-name">後側 (Back)</span>
                   <span id="adc-back" class="adc-num font-mono">1500 raw</span>
                   <span class="adc-percent font-mono" id="pct-back">25.0%</span>
                 </div>
                 <div class="adc-row">
-                  <span class="sensor-name">撌血 (Left)</span>
+                  <span class="sensor-name">左側 (Left)</span>
                   <span id="adc-left" class="adc-num font-mono">1500 raw</span>
                   <span class="adc-percent font-mono" id="pct-left">25.0%</span>
                 </div>
                 <div class="adc-row">
-                  <span class="sensor-name">?喳 (Right)</span>
+                  <span class="sensor-name">右側 (Right)</span>
                   <span id="adc-right" class="adc-num font-mono">1500 raw</span>
                   <span class="adc-percent font-mono" id="pct-right">25.0%</span>
                 </div>
@@ -328,9 +329,9 @@
             <div class="card-header">
               <div>
                 <span class="card-eyebrow">ENVIRONMENT TELEMETRY</span>
-                <h2>銵絕?啣?皞急?摨?/h2>
+                <h2>衛浴環境溫濕度</h2>
               </div>
-              <span id="health-env" class="chip chip-success">?啣??葫甇?虜</span>
+              <span id="health-env" class="chip chip-success">環境感測正常</span>
             </div>
 
             <div class="env-body-grid">
@@ -342,9 +343,9 @@
                   </svg>
                 </div>
                 <div class="env-data">
-                  <span class="env-label">?啣?皞怠漲</span>
-                  <div class="env-val font-mono"><span id="metric-temp">27.5</span> <small>簞C</small></div>
-                  <span id="temp-hint" class="env-hint">瘞湔澈?啣???拐葉</span>
+                  <span class="env-label">環境溫度</span>
+                  <div class="env-val font-mono"><span id="metric-temp">27.5</span> <small>°C</small></div>
+                  <span id="temp-hint" class="env-hint">水溫環境舒適適中</span>
                 </div>
               </div>
 
@@ -356,9 +357,9 @@
                   </svg>
                 </div>
                 <div class="env-data">
-                  <span class="env-label">?詨?瞈漲</span>
+                  <span class="env-label">相對濕度</span>
                   <div class="env-val font-mono"><span id="metric-humidity">78.0</span> <small>%</small></div>
-                  <span id="humid-hint" class="env-hint">瘛絕瘞湔除憌賢?甇?虜</span>
+                  <span id="humid-hint" class="env-hint">淋浴水氣飽和正常</span>
                 </div>
               </div>
             </div>
@@ -369,9 +370,9 @@
             <div class="card-header">
               <div>
                 <span class="card-eyebrow">DIAGNOSTIC EVENT LOG</span>
-                <h2>?單?鈭辣?郎?望風蝔?/h2>
+                <h2>即時事件與警報歷程</h2>
               </div>
-              <button id="btn-clear-events" type="button" class="btn-text">皜甇瑞?</button>
+              <button id="btn-clear-events" type="button" class="btn-text">清除歷程</button>
             </div>
 
             <div class="events-container">
@@ -390,16 +391,16 @@
     <!-- Footer & API Connection Endpoint Drawer -->
     <footer class="app-footer">
       <div class="footer-left">
-        <p><strong>?箸瘣鴃璊?(Smart Shower Chair)</strong> 繚 閮剖?蝡臬??函???批?銵冽</p>
-        <small class="text-muted">?舀 ESP32-S3 MQTT 3.1.1 閬 (FSR / ToF / DHT) 繚 ????摰???/small>
+        <p><strong>智慧洗澡椅 (Smart Shower Chair)</strong> · 設備端安全狀態監控儀表板</p>
+        <small class="text-muted">支援 ESP32-S3 MQTT 3.1.1 規格 (FSR / ToF / DHT) · 雙重狀態判定機制</small>
       </div>
 
       <div class="footer-right">
         <div class="api-config-box">
-          <label for="api-base-url" class="api-label">敺垢 API 雿?:</label>
+          <label for="api-base-url" class="api-label">後端 API 位址:</label>
           <div class="input-group">
             <input type="url" id="api-base-url" value="http://127.0.0.1:8000" placeholder="http://127.0.0.1:8000">
-            <button id="btn-connect-api" type="button" class="btn-secondary">????API ???</button>
+            <button id="btn-connect-api" type="button" class="btn-secondary">切換至 API 連線</button>
           </div>
         </div>
       </div>
